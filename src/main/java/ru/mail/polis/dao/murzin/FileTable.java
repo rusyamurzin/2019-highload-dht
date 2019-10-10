@@ -190,6 +190,11 @@ public class FileTable implements Table, Closeable {
     }
 
     @Override
+    public long sizeInBytes() {
+        throw new UnsupportedOperationException("This method not for FileTable");
+    }
+
+    @Override
     public void close() throws IOException {
         if (fileChannel != null) {
             fileChannel.close();
