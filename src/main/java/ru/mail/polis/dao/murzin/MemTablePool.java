@@ -24,8 +24,8 @@ import ru.mail.polis.dao.Iters;
 public class MemTablePool  implements Table, Closeable {
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private volatile MemTable current;
-    private NavigableMap<Integer, Table> pendingFlush;
-    private BlockingQueue<TableToFlush> flushQueue;
+    private final NavigableMap<Integer, Table> pendingFlush;
+    private final BlockingQueue<TableToFlush> flushQueue;
     private int generation;
     private final long memFlushThreshold;
     private final AtomicBoolean stop = new AtomicBoolean();
@@ -45,7 +45,7 @@ public class MemTablePool  implements Table, Closeable {
 
     @NotNull
     @Override
-    public Iterator<Cell> iterator(@NotNull ByteBuffer from) throws IOException {
+    public Iterator<Cell> iterator(@NotNull final ByteBuffer from) throws IOException {
         lock.readLock().lock();
         final Collection<Iterator<Cell>> iterators;
         try {
@@ -59,9 +59,8 @@ public class MemTablePool  implements Table, Closeable {
         }
 
         final Iterator<Cell> merged = Iterators.mergeSorted(iterators, Cell.COMPARATOR);
-        Iterator<Cell> withoutEquals = Iters.collapseEquals(merged, Cell::getKey);
-        final Iterator<Cell> alive = Iterators.filter(withoutEquals, input -> input.getValue().getData() != null);
-        return alive;
+        final Iterator<Cell> withoutEquals = Iters.collapseEquals(merged, Cell::getKey);
+        return Iterators.filter(withoutEquals, input -> input.getValue().getData() != null);
     }
 
     @Override

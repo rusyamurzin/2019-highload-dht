@@ -29,7 +29,7 @@ public class MyDAO implements DAO {
     private final ByteBuffer emptyBuffer = ByteBuffer.allocate(0);
     private final MemTablePool memTable;
     private final FlusherThread flusher;
-    private List<FileTable> fileTables;
+    private final List<FileTable> fileTables;
 
     private class FlusherThread extends Thread {
         public FlusherThread() {
@@ -54,6 +54,7 @@ public class MyDAO implements DAO {
             }
         }
     }
+
     /**
      * The Log-Structured Merge-Tree implementation DAO.
      * @param base path to working directory

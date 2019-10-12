@@ -3,14 +3,13 @@ package ru.mail.polis.dao.murzin;
 public class TableToFlush {
     private final int generation;
     private final Table table;
+    private final boolean poisonPill;
 
     public boolean isPoisonPill() {
         return poisonPill;
     }
 
-    private final boolean poisonPill;
-
-    public TableToFlush(int generation, Table table) {
+    public TableToFlush(final int generation, final Table table) {
         this(generation, table, false);
     }
 
@@ -20,7 +19,7 @@ public class TableToFlush {
      * @param table file table
      * @param poisonPill is to be killed flag
      */
-    public TableToFlush(int generation, Table table, boolean poisonPill) {
+    public TableToFlush(final int generation, final Table table, final boolean poisonPill) {
         this.generation = generation;
         this.table = table;
         this.poisonPill = poisonPill;

@@ -25,6 +25,12 @@ public final class SimpleHttpServer extends HttpServer implements Service {
     private static final Logger logger = LoggerFactory.getLogger(SimpleHttpServer.class);
     private final DAO dao;
 
+    /**
+     * Http server for DAO implementation.
+     * @param port number of port on which server work
+     * @param dao DAO object
+     * @throws IOException if can`t getConfig(port)
+     */
     public SimpleHttpServer(final int port, @NotNull final DAO dao) throws IOException {
         super(getConfig(port));
         this.dao = dao;
@@ -36,6 +42,12 @@ public final class SimpleHttpServer extends HttpServer implements Service {
         return new Response(Response.OK, Response.EMPTY);
     }
 
+    /**
+     * API for requests on /entity path
+     * @param id key
+     * @param request Http request
+     * @return Http response
+     */
     @Path("/v0/entity")
     public Response entity(@Param("id") final String id, final Request request) {
 
@@ -52,7 +64,7 @@ public final class SimpleHttpServer extends HttpServer implements Service {
             case Request.METHOD_GET:
                 final ByteBuffer value = dao.get(key);
                 final ByteBuffer duplicate = value.duplicate();
-                byte[] body = new byte[duplicate.remaining()];
+                final byte[] body = new byte[duplicate.remaining()];
                 duplicate.get(body);
                 return new Response(Response.OK, body);
             case Request.METHOD_PUT:
@@ -75,16 +87,16 @@ public final class SimpleHttpServer extends HttpServer implements Service {
         if (port <= 1024 || port >= 65536) {
             throw new IllegalArgumentException("Invalid port");
         }
-        AcceptorConfig acceptorConfig = new AcceptorConfig();
+        final AcceptorConfig acceptorConfig = new AcceptorConfig();
         acceptorConfig.port = port;
-        HttpServerConfig config = new HttpServerConfig();
+        final HttpServerConfig config = new HttpServerConfig();
         config.acceptors = new AcceptorConfig[]{acceptorConfig};
         config.selectors = 4;
         return config;
     }
 
     @Override
-    public void handleDefault(Request request, HttpSession session) throws IOException {
+    public void handleDefault(final Request request, final HttpSession session) throws IOException {
         session.sendResponse(new Response(Response.BAD_REQUEST, Response.EMPTY));
     }
 }

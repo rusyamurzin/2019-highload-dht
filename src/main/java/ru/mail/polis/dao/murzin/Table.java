@@ -9,5 +9,5 @@ public interface Table {
     @NotNull
     Iterator<Cell> iterator(@NotNull ByteBuffer from) throws IOException;
 
-    public long sizeInBytes();
+    long sizeInBytes();
 }
