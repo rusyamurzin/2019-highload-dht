@@ -133,7 +133,7 @@ public class MyDAO implements DAO {
     }
 
     void flush(final int generation, final Table table) throws IOException {
-        final Iterator<Cell> iterator = table.iterator(ByteBuffer.allocate(0));
+        final Iterator<Cell> iterator = table.iterator(emptyBuffer);
         if (iterator.hasNext()) {
             final File tmp = new File(base, generation + BASE_NAME + TEMP);
             FileTable.write(memTable.iterator(emptyBuffer), tmp);
