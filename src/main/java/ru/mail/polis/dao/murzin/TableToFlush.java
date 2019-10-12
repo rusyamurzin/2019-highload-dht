@@ -14,6 +14,12 @@ public class TableToFlush {
         this(generation, table, false);
     }
 
+    /**
+     * Table to flush with generation.
+     * @param generation generation of file table
+     * @param table file table
+     * @param poisonPill is to be killed flag
+     */
     public TableToFlush(int generation, Table table, boolean poisonPill) {
         this.generation = generation;
         this.table = table;

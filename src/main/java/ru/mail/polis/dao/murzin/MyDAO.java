@@ -131,31 +131,14 @@ public class MyDAO implements DAO {
         memTable.upsert(key.duplicate(), value.duplicate());
     }
 
-//    private void checkThreshold() throws IOException{
-//        if (memTable.sizeInBytes() > flushThreshold) {
-//            flush();
-//        }
-//        if (fileTables.size() > MAX_TABLES) {
-//            compact();
-//        }
-//    }
-
     void flush(final int generation, final Table table) throws IOException {
-        Iterator<Cell> iterator = table.iterator(ByteBuffer.allocate(0));
+        final Iterator<Cell> iterator = table.iterator(ByteBuffer.allocate(0));
         if (iterator.hasNext()) {
             final File tmp = new File(base, generation + BASE_NAME + TEMP);
             FileTable.write(memTable.iterator(emptyBuffer), tmp);
             final File dest = new File(base, generation + BASE_NAME + SUFFIX);
             Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
             fileTables.add(new FileTable(dest));
-        }
-    }
-
-    private void deleteFile(final List<Path> errorsList, final Path path) {
-        try {
-            Files.delete(path);
-        } catch (IOException e) {
-            errorsList.add(path);
         }
     }
 

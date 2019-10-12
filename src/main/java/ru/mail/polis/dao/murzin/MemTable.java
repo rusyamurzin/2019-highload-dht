@@ -15,7 +15,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class MemTable implements Table {
     private final SortedMap<ByteBuffer, Value> map = new ConcurrentSkipListMap<>();
-    private AtomicLong sizeInBytes = new AtomicLong();
+    private final AtomicLong sizeInBytes = new AtomicLong();
 
     @Override
     public long sizeInBytes() {

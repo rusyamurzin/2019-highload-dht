@@ -30,6 +30,11 @@ public class MemTablePool  implements Table, Closeable {
     private final long memFlushThreshold;
     private final AtomicBoolean stop = new AtomicBoolean();
 
+    /**
+     * Queue for flushing tables.
+     * @param memFlushThreshold threshold to flush table
+     * @param startGeneration start value of generation
+     */
     public MemTablePool(final long memFlushThreshold, final int startGeneration) {
         this.memFlushThreshold = memFlushThreshold;
         this.generation = startGeneration;
@@ -73,6 +78,11 @@ public class MemTablePool  implements Table, Closeable {
         }
     }
 
+    /**
+     * Update or insert value by key.
+     * @param key updated or inserted key
+     * @param value updated or inserted value
+     */
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         if (stop.get()) {
             throw new IllegalStateException("Already stopped!");
@@ -81,7 +91,11 @@ public class MemTablePool  implements Table, Closeable {
         enqueueFlush();
     }
 
-    public void remove(@NotNull final ByteBuffer key) throws IOException {
+    /**
+     * Remove value by key.
+     * @param key deleted key
+     */
+    public void remove(@NotNull final ByteBuffer key) {
         if (stop.get()) {
             throw new IllegalStateException("Already stopped!");
         }
