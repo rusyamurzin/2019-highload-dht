@@ -38,7 +38,10 @@ public final class Value implements Comparable<Value> {
      * @return data as byte buffer
      */
     public ByteBuffer getData() {
-        return data == null ? null : data.asReadOnlyBuffer();
+        if (data == null) {
+            throw new IllegalStateException("Data is null!");
+        }
+        return data.asReadOnlyBuffer();
     }
 
     @Override

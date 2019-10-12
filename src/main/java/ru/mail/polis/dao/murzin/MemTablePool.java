@@ -60,7 +60,7 @@ public class MemTablePool  implements Table, Closeable {
 
         final Iterator<Cell> merged = Iterators.mergeSorted(iterators, Cell.COMPARATOR);
         final Iterator<Cell> withoutEquals = Iters.collapseEquals(merged, Cell::getKey);
-        return Iterators.filter(withoutEquals, input -> input.getValue().getData() != null);
+        return Iterators.filter(withoutEquals, input -> !input.getValue().isRemoved());
     }
 
     @Override
