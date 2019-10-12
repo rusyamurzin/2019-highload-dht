@@ -43,7 +43,7 @@ public final class SimpleHttpServer extends HttpServer implements Service {
     }
 
     /**
-     * API for requests on /entity path
+     * API for requests on /entity path.
      * @param id key
      * @param request Http request
      * @return Http response
