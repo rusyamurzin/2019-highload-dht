@@ -156,6 +156,10 @@ public class MyDAO implements DAO {
             flusher.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } finally {
+            for (FileTable fileTable : fileTables) {
+                fileTable.close();
+            }
         }
     }
 
