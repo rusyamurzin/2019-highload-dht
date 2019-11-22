@@ -46,8 +46,8 @@ public class MemTablePool  implements Table, Closeable {
     @NotNull
     @Override
     public Iterator<Cell> iterator(@NotNull final ByteBuffer from) throws IOException {
-        lock.readLock().lock();
         final Collection<Iterator<Cell>> iterators;
+        lock.readLock().lock();
         try {
             iterators = new ArrayList<>(pendingFlush.size() + 1);
             iterators.add(current.iterator(from));
@@ -117,8 +117,8 @@ public class MemTablePool  implements Table, Closeable {
 
     private void enqueueFlush() {
         if (current.sizeInBytes() > memFlushThreshold) {
-            lock.writeLock().lock();
             TableToFlush toFlush = null;
+            lock.writeLock().lock();
             try {
                 if (current.sizeInBytes() > memFlushThreshold) {
                     toFlush = new TableToFlush(generation, current);
@@ -143,8 +143,8 @@ public class MemTablePool  implements Table, Closeable {
         if (!stop.compareAndSet(false, true)) {
             return;
         }
-        lock.writeLock().lock();
         TableToFlush toFlush;
+        lock.writeLock().lock();
         try {
             toFlush = new TableToFlush(generation, current, true);
         } finally {

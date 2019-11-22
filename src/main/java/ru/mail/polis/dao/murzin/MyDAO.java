@@ -49,7 +49,7 @@ public class MyDAO implements DAO {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    e.getMessage();
                 }
             }
         }
@@ -61,6 +61,7 @@ public class MyDAO implements DAO {
      * @param flushThreshold threshold value of flush
      * @throws IOException if walk on base directory is failed or can`t create SSTable
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public MyDAO(
             final File base,
             final long flushThreshold) throws IOException {
@@ -160,7 +161,7 @@ public class MyDAO implements DAO {
 
     private int getGenerationOf(final String name) {
         int result = -1;
-        final long genLong = Long.parseLong(name.split("_")[0]);
+        final long genLong = Long.parseLong(name.split("_", -1)[0]);
         if (genLong > Integer.MAX_VALUE) {
             result = Integer.MAX_VALUE;
         } else if (genLong < Integer.MIN_VALUE) {
