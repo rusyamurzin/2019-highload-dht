@@ -18,6 +18,7 @@ package ru.mail.polis;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import ru.mail.polis.dao.DAO;
 import ru.mail.polis.dao.DAOFactory;
@@ -36,6 +37,12 @@ public final class Server {
         // Not instantiable
     }
 
+    /**
+     * Starts a single server node.
+     *
+     * @param args unused
+     * @throws IOException in case of any IO error
+     */
     public static void main(final String[] args) throws IOException {
         // Temporary storage in the file system
         final File data = Files.createTempDirectory();
@@ -45,7 +52,8 @@ public final class Server {
         final Service service =
                 ServiceFactory.create(
                         PORT,
-                        dao);
+                        dao,
+                        Collections.singleton("http://localhost:" + PORT));
         service.start();
         Runtime.getRuntime().addShutdownHook(
                 new Thread(() -> {

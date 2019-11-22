@@ -56,7 +56,7 @@ class SingleNodeTest extends TestBase {
         data = Files.createTempDirectory();
         dao = DAOFactory.create(data);
         endpoint = endpoint(port);
-        storage = ServiceFactory.create(port, dao);
+        storage = ServiceFactory.create(port, dao, Collections.singleton(endpoint));
         storage.start();
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
         reset();
@@ -76,8 +76,8 @@ class SingleNodeTest extends TestBase {
         }
         client = new HttpClient(
                 new ConnectionString(
-                        "http://localhost:" + port +
-                                "?timeout=" + (TIMEOUT.toMillis() / 2)));
+                        "http://localhost:" + port
+                                + "?timeout=" + (TIMEOUT.toMillis() / 2)));
     }
 
     @NotNull
@@ -205,7 +205,7 @@ class SingleNodeTest extends TestBase {
     }
 
     @Test
-    void upsert() {
+    void overwrite() {
         assertTimeoutPreemptively(TIMEOUT, () -> {
             final String key = randomId();
             final byte[] value1 = randomValue();
@@ -246,7 +246,7 @@ class SingleNodeTest extends TestBase {
             dao = DAOFactory.create(data);
             port = randomPort();
             endpoint = endpoint(port);
-            storage = ServiceFactory.create(port, dao);
+            storage = ServiceFactory.create(port, dao, Collections.singleton(endpoint));
             storage.start();
             Thread.sleep(TimeUnit.SECONDS.toMillis(1));
             reset();
@@ -277,7 +277,7 @@ class SingleNodeTest extends TestBase {
     }
 
     @Test
-    void delete() {
+    void remove() {
         assertTimeoutPreemptively(TIMEOUT, () -> {
             final String key = randomId();
             final byte[] value = randomValue();
