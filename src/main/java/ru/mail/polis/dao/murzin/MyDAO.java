@@ -44,7 +44,7 @@ public class MyDAO implements DAO {
                 try {
                     toFlush = memTable.takeToFlush();
                     poisonReceived = toFlush.isPoisonPill();
-                    flush(toFlush.getGeneration(), toFlush.getTable());
+                    flush(toFlush.getGeneration() + 1, toFlush.getTable());
                     memTable.flushed(toFlush.getGeneration());
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -102,7 +102,7 @@ public class MyDAO implements DAO {
      * @throws IOException if fileTable.iterator(from) is failed
      */
     private Iterator<Cell> iteratorAliveCells(@NotNull final ByteBuffer from) throws IOException {
-        final List<Iterator<Cell>> listIterators = new ArrayList<>();
+        final List<Iterator<Cell>> listIterators = new CopyOnWriteArrayList<>();
         for (final FileTable fileTable : fileTables) {
             listIterators.add(fileTable.iterator(from));
         }
@@ -137,7 +137,7 @@ public class MyDAO implements DAO {
         final Iterator<Cell> iterator = table.iterator(emptyBuffer);
         if (iterator.hasNext()) {
             final File tmp = new File(base, generation + BASE_NAME + TEMP);
-            FileTable.write(memTable.iterator(emptyBuffer), tmp);
+            FileTable.write(iterator, tmp);
             final File dest = new File(base, generation + BASE_NAME + SUFFIX);
             Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
             fileTables.add(new FileTable(dest));
@@ -151,8 +151,8 @@ public class MyDAO implements DAO {
 
     @Override
     public void close() throws IOException {
-        memTable.close();
         try {
+            memTable.close();
             flusher.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -175,5 +175,49 @@ public class MyDAO implements DAO {
             result = (int) genLong;
         }
         return result;
+    }
+
+    @Override
+    public void compact() throws IOException {
+        final Iterator<Cell> cellIterator = iteratorAliveCells(emptyBuffer);
+        final int[] generation = {0};
+        try (Stream<Path> files = Files.walk(base.toPath())) {
+            files.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(BASE_NAME + SUFFIX))
+                    .forEach(p -> {
+                        generation[0] = Math.max(generation[0], getGenerationOf(p.getFileName().toString()));
+                    });
+        }
+        final File tmp = new File(base, generation[0] + 1 + BASE_NAME + TEMP);
+        FileTable.write(cellIterator, tmp);
+        final File dest = new File(base, generation[0] + 1 + BASE_NAME + SUFFIX);
+        Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        memTable.close();
+
+        final List<Path> errorsDeleteFiles = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(base.toPath())) {
+            files.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(BASE_NAME + SUFFIX))
+                    .forEach(p -> {
+                        if (getGenerationOf(p.getFileName().toString()) != generation[0] + 1) {
+                            deleteFile(errorsDeleteFiles, p);
+                        }
+                    });
+        }
+
+        if (!errorsDeleteFiles.isEmpty()) {
+            throw new IOException("Can not delete file " + errorsDeleteFiles.get(0).toString());
+        }
+
+        memTable.start();
+        fileTables.add(new FileTable(dest));
+    }
+
+    private void deleteFile(final List<Path> errorsList, final Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            errorsList.add(path);
+        }
     }
 }

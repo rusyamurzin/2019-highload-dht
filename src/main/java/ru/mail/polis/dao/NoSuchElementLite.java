@@ -8,8 +8,8 @@ public class NoSuchElementLite extends NoSuchElementException {
         super(s);
     }
 
-    @Override
+   /* @Override
     public synchronized Throwable fillInStackTrace() {
         return this;
-    }
+    }*/
 }

@@ -57,7 +57,7 @@ public final class Value implements Comparable<Value> {
      * Get current time in nanoseconds.
      * @return current time in nanoseconds
      */
-    public static long getCurrentTimeNanos() {
+    public synchronized static long getCurrentTimeNanos() {
         final long currentTime = System.currentTimeMillis();
         if (currentTime != lastTime) {
             additionalTime = 0;

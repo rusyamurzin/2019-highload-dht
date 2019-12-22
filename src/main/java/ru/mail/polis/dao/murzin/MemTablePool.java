@@ -27,6 +27,11 @@ public class MemTablePool  implements Table, Closeable {
     private final NavigableMap<Integer, Table> pendingFlush;
     private final BlockingQueue<TableToFlush> flushQueue;
     private int generation;
+
+    public long getMemFlushThreshold() {
+        return memFlushThreshold;
+    }
+
     private final long memFlushThreshold;
     private final AtomicBoolean stop = new AtomicBoolean();
 
@@ -86,7 +91,7 @@ public class MemTablePool  implements Table, Closeable {
         if (stop.get()) {
             throw new IllegalStateException("Already stopped!");
         }
-        current.upsert(key, value);
+        current.upsert(key.duplicate(), value.duplicate());
         enqueueFlush();
     }
 
@@ -104,6 +109,10 @@ public class MemTablePool  implements Table, Closeable {
 
     TableToFlush takeToFlush() throws InterruptedException {
         return flushQueue.take();
+    }
+
+    TableToFlush peekFlushQueue() {
+        return flushQueue.peek();
     }
 
     void flushed(final int generation) {
@@ -155,5 +164,9 @@ public class MemTablePool  implements Table, Closeable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    public boolean start() {
+        return stop.compareAndSet(true, false);
     }
 }
