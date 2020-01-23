@@ -133,7 +133,7 @@ public class MyDAO implements DAO {
         memTable.upsert(key.duplicate(), value.duplicate());
     }
 
-    void flush(final int generation, final Table table) throws IOException {
+    public void flush(final int generation, final Table table) throws IOException {
         final Iterator<Cell> iterator = table.iterator(emptyBuffer);
         if (iterator.hasNext()) {
             final File tmp = new File(base, generation + BASE_NAME + TEMP);
@@ -142,6 +142,7 @@ public class MyDAO implements DAO {
             Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
             fileTables.add(new FileTable(dest));
         }
+        System.out.println("flush is called for " + generation + " and table is " + table + " and fileTables size " + fileTables.size());
     }
 
     @Override

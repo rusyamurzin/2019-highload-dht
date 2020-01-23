@@ -3,6 +3,7 @@ package ru.mail.polis.dao;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,7 @@ class ConcurrentTest extends TestBase {
 
     @Test
     void tenReaderWriterManyRecords(@TempDir File data) throws IOException, InterruptedException {
-        concurrentReadWrite(10, 1_000_000, data);
+        concurrentReadWrite(10, 100, data);
     }
 
     private void concurrentWrites(int threadsCount,
@@ -111,6 +112,9 @@ class ConcurrentTest extends TestBase {
                                   @NotNull final File data)
             throws IOException, InterruptedException {
         final RecordsGenerator records = new RecordsGenerator(recordsCount, 0);
+        System.out.println("getConstantKey is " + records.getConstantKey());
+        System.out.println("getFirstConstantValue is " + records.getFirstConstantValue());
+        System.out.println("getSecondConstantValue is " + records.getSecondConstantValue());
         try (final DAO dao = DAOFactory.create(data)) {
             final ExecutorService executor = new ThreadPoolExecutor(threadsCount, threadsCount,
                     1, TimeUnit.MINUTES,
@@ -131,7 +135,13 @@ class ConcurrentTest extends TestBase {
                         dao.upsert(record.getKey(), record.getValue());
                         ByteBuffer value = dao.get(record.getKey());
                         if (value.equals(record.getValue().duplicate().rewind())) {
-                            matches.incrementAndGet();
+                            //final int flushTreshold =
+                                    matches.incrementAndGet();
+                            /*if (flushTreshold == 10000) {
+
+                            }*/
+                        } else {
+                            System.out.println(matches.get() + ": " + getReadonlyBufferValue("dao value", value, Integer.MAX_VALUE) + " is not equals " + getReadonlyBufferValue("record value", record.getValue(), Integer.MAX_VALUE));
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -140,7 +150,18 @@ class ConcurrentTest extends TestBase {
             }
             executor.shutdown();
             executor.awaitTermination(1, TimeUnit.MINUTES);
+            System.out.println(getReadonlyBufferValue("dao get constant key ", dao.get(records.next().getKey()), Integer.MAX_VALUE));
             assertEquals(recordsCount, matches.get());
         }
+    }
+
+    public static String getReadonlyBufferValue(String prefix, ByteBuffer b, int limit) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("\n").append(prefix).append(" ").append(" value is ");
+        for (int j = 0; j < b.capacity() && j < limit; j++) {
+            stringBuilder.append(" ").append(b.get(j));
+        }
+        stringBuilder.append("\n");
+        return stringBuilder.toString();
     }
 }
