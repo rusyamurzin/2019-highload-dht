@@ -22,11 +22,15 @@ public final class Value implements Comparable<Value> {
     }
 
     public static Value of(final ByteBuffer data) {
-        return new Value(getCurrentTimeNanos(), data.duplicate());
+        long timestamp = getCurrentTimeNanos();
+        System.out.println(getReadonlyBufferValue(timestamp + " ts of value of ", data.duplicate(), Integer.MAX_VALUE));
+        return new Value(timestamp, data.duplicate());
     }
 
     public static Value tombstone() {
-        return new Value(getCurrentTimeNanos(), null);
+        long timestamp = getCurrentTimeNanos();
+        System.out.println("Tombstone with timestamp is " + timestamp);
+        return new Value(timestamp, null);
     }
 
     public boolean isRemoved() {
@@ -64,5 +68,15 @@ public final class Value implements Comparable<Value> {
             lastTime = currentTime;
         }
         return currentTime * 1_000_000 + ++additionalTime;
+    }
+
+    public static String getReadonlyBufferValue(String prefix, ByteBuffer b, int limit) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("\n").append(prefix).append(" ").append(" value is ");
+        for (int j = 0; j < b.capacity() && j < limit; j++) {
+            stringBuilder.append(" ").append(b.get(j));
+        }
+        stringBuilder.append("\n");
+        return stringBuilder.toString();
     }
 }

@@ -27,7 +27,7 @@ public class MyDAO implements DAO {
 
     private final File base;
     private final ByteBuffer emptyBuffer = ByteBuffer.allocate(0);
-    private final MemTablePool memTable;
+    private final MemTablePool memTablePool;
     private final FlusherThread flusher;
     private final List<FileTable> fileTables;
 
@@ -42,10 +42,10 @@ public class MyDAO implements DAO {
             while (!poisonReceived && !isInterrupted()) {
                 TableToFlush toFlush = null;
                 try {
-                    toFlush = memTable.takeToFlush();
+                    toFlush = memTablePool.takeToFlush();
                     poisonReceived = toFlush.isPoisonPill();
                     flush(toFlush.getGeneration() + 1, toFlush.getTable());
-                    memTable.flushed(toFlush.getGeneration());
+                    memTablePool.flushed(toFlush.getGeneration());
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (IOException e) {
@@ -79,7 +79,7 @@ public class MyDAO implements DAO {
                         generation[0] = Math.max(generation[0], getGenerationOf(p.getFileName().toString()));
                     });
         }
-        this.memTable = new MemTablePool(flushThreshold, generation[0]);
+        this.memTablePool = new MemTablePool(flushThreshold, generation[0]);
         this.flusher = new FlusherThread();
         this.flusher.start();
         if (!errorsCreateSSTable[0].isEmpty()) {
@@ -107,7 +107,7 @@ public class MyDAO implements DAO {
             listIterators.add(fileTable.iterator(from));
         }
 
-        listIterators.add(memTable.iterator(from));
+        listIterators.add(memTablePool.iterator(from));
         final Iterator<Cell> cells = Iters.collapseEquals(
                 Iterators.mergeSorted(listIterators, Cell.COMPARATOR),
                 Cell::getKey
@@ -130,7 +130,7 @@ public class MyDAO implements DAO {
 
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
-        memTable.upsert(key.duplicate(), value.duplicate());
+        memTablePool.upsert(key.duplicate(), value.duplicate());
     }
 
     public void flush(final int generation, final Table table) throws IOException {
@@ -147,13 +147,13 @@ public class MyDAO implements DAO {
 
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
-        memTable.remove(key.duplicate());
+        memTablePool.remove(key.duplicate());
     }
 
     @Override
     public void close() throws IOException {
         try {
-            memTable.close();
+            memTablePool.close();
             flusher.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -193,7 +193,7 @@ public class MyDAO implements DAO {
         FileTable.write(cellIterator, tmp);
         final File dest = new File(base, generation[0] + 1 + BASE_NAME + SUFFIX);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        memTable.close();
+        memTablePool.close();
 
         final List<Path> errorsDeleteFiles = new ArrayList<>();
         try (Stream<Path> files = Files.walk(base.toPath())) {
@@ -210,7 +210,7 @@ public class MyDAO implements DAO {
             throw new IOException("Can not delete file " + errorsDeleteFiles.get(0).toString());
         }
 
-        memTable.start();
+        memTablePool.start();
         fileTables.add(new FileTable(dest));
     }
 

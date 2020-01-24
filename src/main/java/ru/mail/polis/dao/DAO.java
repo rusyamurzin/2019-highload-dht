@@ -19,6 +19,8 @@ package ru.mail.polis.dao;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.polis.Record;
+import ru.mail.polis.dao.murzin.MemTable;
+import ru.mail.polis.dao.murzin.MemTablePool;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,7 +35,6 @@ import java.util.NoSuchElementException;
  * @author Dmitry Schitinin
  */
 public interface DAO extends Closeable {
-
     /**
      * Provides iterator (possibly empty) over {@link Record}s starting at "from" key (inclusive)
      * in <b>ascending</b> order according to {@link Record#compareTo(Record)}.
@@ -72,18 +73,16 @@ public interface DAO extends Closeable {
      */
     @NotNull
     default ByteBuffer get(@NotNull ByteBuffer key) throws IOException, NoSuchElementException {
-        synchronized (this) {
-            final Iterator<Record> iter = iterator(key);
-            if (!iter.hasNext()) {
-                throw new NoSuchElementLite("Not found");
-            }
+        final Iterator<Record> iter = iterator(key);
+        if (!iter.hasNext()) {
+            throw new NoSuchElementLite("Not found");
+        }
 
-            final Record next = iter.next();
-            if (next.getKey().equals(key)) {
-                return next.getValue();
-            } else {
-                throw new NoSuchElementLite("Not found");
-            }
+        final Record next = iter.next();
+        if (next.getKey().equals(key)) {
+            return next.getValue();
+        } else {
+            throw new NoSuchElementLite("Not found");
         }
     }
 

@@ -22,7 +22,7 @@ import com.google.common.collect.Iterators;
 import ru.mail.polis.dao.Iters;
 
 public class MemTablePool  implements Table, Closeable {
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    public static final ReadWriteLock lock = new ReentrantReadWriteLock();
     private volatile MemTable current;
     private final NavigableMap<Integer, Table> pendingFlush;
     private final BlockingQueue<TableToFlush> flushQueue;
