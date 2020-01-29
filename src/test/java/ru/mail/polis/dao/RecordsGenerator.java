@@ -20,10 +20,6 @@ class RecordsGenerator implements Iterator<Record> {
     private final Random values;
     private final Map<Integer, Byte> samples;
 
-    private final int constantKey;
-    private final int firstConstantValue;
-    private final int secondConstantValue;
-
     private int record;
 
     RecordsGenerator(final int count, final int samplePeriod) {
@@ -35,9 +31,6 @@ class RecordsGenerator implements Iterator<Record> {
         this.values = new Random(valueSeed);
         this.samples = samplePeriod > 0 ? new HashMap<>(count / samplePeriod) : null;
         this.record = 0;
-        this.constantKey = this.keys.nextInt();
-        this.firstConstantValue = this.values.nextInt();
-        this.secondConstantValue = this.values.nextInt();
     }
 
     @Override
@@ -49,12 +42,12 @@ class RecordsGenerator implements Iterator<Record> {
     public Record next() {
         record++;
 
-        final int keyPayload = this.constantKey;//keys.nextInt();
+        final int keyPayload = keys.nextInt();
         final ByteBuffer key = ByteBuffer.allocate(Integer.BYTES);
         key.putInt(keyPayload);
         key.rewind();
 
-        final byte valuePayload = (byte) ((record % 2 == 0) ? firstConstantValue : secondConstantValue);
+        final byte valuePayload = (byte) values.nextInt();
         final ByteBuffer value = ByteBuffer.allocate(Byte.BYTES);
         value.put(valuePayload);
         value.rewind();
@@ -72,18 +65,6 @@ class RecordsGenerator implements Iterator<Record> {
 
     Map<Integer, Byte> getSamples() {
         return Collections.unmodifiableMap(samples);
-    }
-
-    public int getConstantKey() {
-        return constantKey;
-    }
-
-    public int getFirstConstantValue() {
-        return firstConstantValue;
-    }
-
-    public int getSecondConstantValue() {
-        return secondConstantValue;
     }
 }
 

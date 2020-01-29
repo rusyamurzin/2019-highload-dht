@@ -22,15 +22,15 @@ public final class Value implements Comparable<Value> {
     }
 
     public static Value of(final ByteBuffer data) {
-        long timestamp = getCurrentTimeNanos();
-        System.out.println(getReadonlyBufferValue(timestamp + " ts of value of ", data.duplicate(), Integer.MAX_VALUE));
-        return new Value(timestamp, data.duplicate());
+        //long timestamp = getCurrentTimeNanos();
+        //System.out.println(getReadonlyBufferValue(timestamp + " ts of value of ", data.duplicate(), Integer.MAX_VALUE));
+        return new Value(getCurrentTimeNanos(), data.duplicate());
     }
 
     public static Value tombstone() {
-        long timestamp = getCurrentTimeNanos();
-        System.out.println("Tombstone with timestamp is " + timestamp);
-        return new Value(timestamp, null);
+        //long timestamp = getCurrentTimeNanos();
+        //System.out.println("Tombstone with timestamp is " + timestamp);
+        return new Value(getCurrentTimeNanos(), null);
     }
 
     public boolean isRemoved() {
@@ -50,6 +50,9 @@ public final class Value implements Comparable<Value> {
 
     @Override
     public int compareTo(@NotNull final Value o) {
+        /*if (data != null && o.data != null) {
+            data.equals(o.data);
+        }*/
         return -Long.compare(ts, o.ts);
     }
 

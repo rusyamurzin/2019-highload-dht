@@ -55,17 +55,18 @@ public class MemTablePool  implements Table, Closeable {
         lock.readLock().lock();
         try {
             iterators = new ArrayList<>(pendingFlush.size() + 1);
-            iterators.add(current.iterator(from));
             for (final Table table : pendingFlush.descendingMap().values()) {
                 iterators.add(table.iterator(from));
             }
+            iterators.add(current.iterator(from));
         } finally {
             lock.readLock().unlock();
         }
 
         final Iterator<Cell> merged = Iterators.mergeSorted(iterators, Cell.COMPARATOR);
         final Iterator<Cell> withoutEquals = Iters.collapseEquals(merged, Cell::getKey);
-        return Iterators.filter(withoutEquals, input -> !input.getValue().isRemoved());
+        return withoutEquals;
+        // Iterators.filter(withoutEquals, input -> !input.getValue().isRemoved());
     }
 
     @Override

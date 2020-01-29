@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -29,7 +30,7 @@ public class MyDAO implements DAO {
     private final ByteBuffer emptyBuffer = ByteBuffer.allocate(0);
     private final MemTablePool memTablePool;
     private final FlusherThread flusher;
-    private final List<FileTable> fileTables;
+    private final Collection<FileTable> fileTables;
 
     private class FlusherThread extends Thread {
         public FlusherThread() {
@@ -142,7 +143,7 @@ public class MyDAO implements DAO {
             Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
             fileTables.add(new FileTable(dest));
         }
-        System.out.println("flush is called for " + generation + " and table is " + table + " and fileTables size " + fileTables.size());
+        //System.out.println("flush is called for " + generation + " and table is " + table + " and fileTables size " + fileTables.size());
     }
 
     @Override
