@@ -19,8 +19,6 @@ package ru.mail.polis.dao;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.polis.Record;
-import ru.mail.polis.dao.murzin.MemTable;
-import ru.mail.polis.dao.murzin.MemTablePool;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -86,34 +84,6 @@ public interface DAO extends Closeable {
         }
     }
 
-    public static void  compareBuffers(ByteBuffer firstKey, ByteBuffer secondKey) {
-        boolean isFirstTime = true;
-        int firstTimeIndex = -1;
-            for (int i = firstKey.capacity() - 1; i >= 0; i--) {
-                if (firstKey.get(i) != secondKey.get(i)) {
-                    if (isFirstTime) {
-                        firstTimeIndex = i;
-                        isFirstTime = false;
-                    }
-                    System.out.println(" i = "+ i + " " + firstKey.get(i) + " != " +secondKey.get(i));
-                }
-            }
-
-        System.out.println("First time in" + firstTimeIndex);
-        System.out.print("\n");
-    }
-
-    public static void printReadonlyBuffer(String prefix, ByteBuffer b, int limit) {
-        System.out.println("\n" + prefix + " " +  b + " head value is ");
-        for (int j = 0; j < b.capacity() && j < limit; j++) {
-            System.out.print(" " + b.get(j));
-        }
-        System.out.print("\n And tail is ");
-        for (int j = b.capacity() - 1; j > 0 && --limit > 0; j--) {
-            System.out.print(" " + b.get(j));
-        }
-        System.out.print("\n");
-    }
     /**
      * Inserts or updates value by given key.
      */

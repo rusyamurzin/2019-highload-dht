@@ -143,7 +143,6 @@ public class MyDAO implements DAO {
             Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
             fileTables.add(new FileTable(dest));
         }
-        //System.out.println("flush is called for " + generation + " and table is " + table + " and fileTables size " + fileTables.size());
     }
 
     @Override
