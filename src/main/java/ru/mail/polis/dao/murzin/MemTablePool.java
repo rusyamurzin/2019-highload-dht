@@ -3,12 +3,7 @@ package ru.mail.polis.dao.murzin;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,17 +16,12 @@ import com.google.common.collect.Iterators;
 
 import ru.mail.polis.dao.Iters;
 
-public class MemTablePool  implements Table, Closeable {
+public class MemTablePool implements Table, Closeable {
     public static final ReadWriteLock lock = new ReentrantReadWriteLock();
     private volatile MemTable current;
     private final NavigableMap<Integer, Table> pendingFlush;
     private final BlockingQueue<TableToFlush> flushQueue;
     private int generation;
-
-    public long getMemFlushThreshold() {
-        return memFlushThreshold;
-    }
-
     private final long memFlushThreshold;
     private final AtomicBoolean stop = new AtomicBoolean();
 
@@ -64,19 +54,14 @@ public class MemTablePool  implements Table, Closeable {
         }
 
         final Iterator<Cell> merged = Iterators.mergeSorted(iterators, Cell.COMPARATOR);
-        final Iterator<Cell> withoutEquals = Iters.collapseEquals(merged, Cell::getKey);
-        return Iterators.filter(withoutEquals, input -> !input.getValue().isRemoved());
+        return Iters.collapseEquals(merged, Cell::getKey);
     }
 
     @Override
     public long sizeInBytes() {
         lock.readLock().lock();
         try {
-            long sizeInBytes = current.sizeInBytes();
-            for (final Map.Entry<Integer, Table> entry: pendingFlush.entrySet()) {
-                sizeInBytes += entry.getValue().sizeInBytes();
-            }
-            return sizeInBytes;
+            return current.sizeInBytes();
         } finally {
             lock.readLock().unlock();
         }
@@ -91,7 +76,12 @@ public class MemTablePool  implements Table, Closeable {
         if (stop.get()) {
             throw new IllegalStateException("Already stopped!");
         }
-        current.upsert(key.duplicate(), value.duplicate());
+        lock.readLock().lock();
+        try {
+            current.upsert(key.duplicate(), value.duplicate());
+        } finally {
+            lock.readLock().unlock();
+        }
         enqueueFlush();
     }
 
@@ -103,7 +93,12 @@ public class MemTablePool  implements Table, Closeable {
         if (stop.get()) {
             throw new IllegalStateException("Already stopped!");
         }
-        current.remove(key);
+        lock.readLock().lock();
+        try {
+            current.remove(key);
+        } finally {
+            lock.readLock().unlock();
+        }
         enqueueFlush();
     }
 
@@ -130,7 +125,8 @@ public class MemTablePool  implements Table, Closeable {
             lock.writeLock().lock();
             try {
                 if (current.sizeInBytes() > memFlushThreshold) {
-                    toFlush = new TableToFlush(generation, current);
+                    toFlush = new TableToFlush(generation, current.iterator(ByteBuffer.allocate(0)));
+                    pendingFlush.put(generation, current);
                     generation++;
                     current = new MemTable();
                 }
@@ -155,7 +151,7 @@ public class MemTablePool  implements Table, Closeable {
         TableToFlush toFlush;
         lock.writeLock().lock();
         try {
-            toFlush = new TableToFlush(generation, current, true);
+            toFlush = new TableToFlush(generation, current.iterator(ByteBuffer.allocate(0)), true);
         } finally {
             lock.writeLock().unlock();
         }
@@ -168,5 +164,9 @@ public class MemTablePool  implements Table, Closeable {
 
     public boolean start() {
         return stop.compareAndSet(true, false);
+    }
+
+    public Iterator<Cell> getIteratorOfCurrentMemTable(@NotNull final ByteBuffer from) {
+        return current.iterator(from);
     }
 }

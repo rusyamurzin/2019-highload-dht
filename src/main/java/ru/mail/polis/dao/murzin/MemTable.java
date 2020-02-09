@@ -31,9 +31,9 @@ public class MemTable implements Table {
     }
 
     void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
-        final Value previous = map.put(key.duplicate(), Value.of(value.duplicate()));
+        final Value previous = map.put(key, Value.of(value));
         if (previous == null) {
-            sizeInBytes.addAndGet(key.remaining() + value.remaining() + Long.BYTES);
+            sizeInBytes.addAndGet(key.remaining() + value.remaining());
         } else if (previous.isRemoved()) {
             sizeInBytes.addAndGet(value.remaining());
         } else {
@@ -42,9 +42,9 @@ public class MemTable implements Table {
     }
 
     void remove(@NotNull final ByteBuffer key) {
-        final Value previous = map.put(key.duplicate(), Value.tombstone());
+        final Value previous = map.put(key, Value.tombstone());
         if (previous == null) {
-            sizeInBytes.addAndGet(key.remaining() + Long.BYTES);
+            sizeInBytes.addAndGet(key.remaining());
         } else if (!previous.isRemoved()) {
             sizeInBytes.addAndGet(-previous.getData().remaining());
         }

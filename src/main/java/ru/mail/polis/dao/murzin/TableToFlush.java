@@ -1,27 +1,30 @@
 package ru.mail.polis.dao.murzin;
 
+import java.util.Iterator;
+
 public class TableToFlush {
     private final int generation;
-    private final Table table;
+    private final Iterator<Cell> tableIterator;
     private final boolean poisonPill;
 
     public boolean isPoisonPill() {
         return poisonPill;
     }
 
-    public TableToFlush(final int generation, final Table table) {
-        this(generation, table, false);
+    public TableToFlush(final int generation, final Iterator<Cell> tableIterator) {
+        this(generation, tableIterator, false);
     }
 
     /**
      * Table to flush with generation.
-     * @param generation generation of file table
-     * @param table file table
-     * @param poisonPill is to be killed flag
+     *
+     * @param generation    generation of file table
+     * @param tableIterator iterator through cells of table
+     * @param poisonPill    is to be killed flag
      */
-    public TableToFlush(final int generation, final Table table, final boolean poisonPill) {
+    public TableToFlush(final int generation, Iterator<Cell> tableIterator, final boolean poisonPill) {
         this.generation = generation;
-        this.table = table;
+        this.tableIterator = tableIterator;
         this.poisonPill = poisonPill;
     }
 
@@ -29,7 +32,7 @@ public class TableToFlush {
         return generation;
     }
 
-    public Table getTable() {
-        return table;
+    public Iterator<Cell> getTableIterator() {
+        return tableIterator;
     }
 }
